@@ -12,6 +12,7 @@
       "scope": "source.cstack",
       "file-types": ["cstack"],
       "highlights": "queries/highlights.scm",
+      "tags": "queries/tags.scm",
       "injection-regex": "^cstack$"
     }
   ],

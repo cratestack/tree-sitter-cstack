@@ -1,0 +1,22 @@
+{
+  "grammars": [
+    {
+      "name": "cstack",
+      "camelcase": "Cstack",
+      "scope": "source.cstack",
+      "path": ".",
+      "file-types": ["cstack"],
+      "highlights": ["queries/highlights.scm"],
+      "injection-regex": "^cstack$"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "Tree-sitter grammar for CrateStack .cstack schema files",
+    "authors": [{ "name": "CrateStack" }],
+    "links": {
+      "repository": "https://github.com/cratestack/tree-sitter-cstack"
+    }
+  }
+}

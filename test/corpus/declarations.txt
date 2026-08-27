@@ -1,0 +1,123 @@
+================================================================================
+datasource with an env() value
+================================================================================
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (datasource_block
+    name: (identifier)
+    (config_body
+      (config_entry key: (identifier) value: (string))
+      (config_entry
+        key: (identifier)
+        value: (function_call name: (identifier) (string))))))
+
+================================================================================
+model with a relation, mixin use and a block attribute
+================================================================================
+
+model Post {
+  id Int @id
+  authorId Int
+  author User @relation(fields: [authorId], references: [id])
+  @use(Timestamps)
+  @@allow('read', auth() != null)
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (model_declaration
+    name: (identifier)
+    (model_body
+      (field name: (identifier) type: (type name: (type_identifier))
+        (attribute name: (attribute_name)))
+      (field name: (identifier) type: (type name: (type_identifier)))
+      (field name: (identifier) type: (type name: (type_identifier))
+        (attribute
+          name: (attribute_name)
+          (attribute_arguments
+            (identifier)
+            (array (identifier))
+            (identifier)
+            (array (identifier)))))
+      (use_directive mixin: (identifier))
+      (block_attribute
+        name: (block_attribute_name)
+        (attribute_arguments
+          (string)
+          (identifier)
+          (attribute_arguments)
+          (identifier))))))
+
+================================================================================
+view projecting from several sources
+================================================================================
+
+view ActiveUser from User, Order {
+  id Uuid
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (view_declaration
+    name: (identifier)
+    source: (identifier)
+    source: (identifier)
+    (model_body
+      (field name: (identifier) type: (type name: (type_identifier))))))
+
+================================================================================
+mutation procedure with a generic return type
+================================================================================
+
+/// Publishes a post.
+mutation procedure publish(args: PublishArgs): Page<Post>
+  @allow(auth() != null)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (doc_comment)
+  (procedure_declaration
+    name: (identifier)
+    (parameter_list
+      (parameter name: (identifier) type: (type name: (type_identifier))))
+    return_type: (type
+      name: (type_identifier)
+      (type_arguments (type name: (type_identifier))))
+    (attribute
+      name: (attribute_name)
+      (attribute_arguments
+        (identifier)
+        (attribute_arguments)
+        (identifier)))))
+
+================================================================================
+field arity and parameterised scalars
+================================================================================
+
+type Money {
+  amount Decimal(10, 2)
+  tags String[]
+  note String?
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_declaration
+    name: (identifier)
+    (field_body
+      (field
+        name: (identifier)
+        type: (type name: (type_identifier) (scalar_arguments (number) (number))))
+      (field name: (identifier) type: (type name: (type_identifier)))
+      (field name: (identifier) type: (type name: (type_identifier))))))

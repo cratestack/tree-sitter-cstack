@@ -1,0 +1,81 @@
+# The conformance job is the point of this workflow.
+#
+# `cratestack-parser` (chumsky, in cratestack/cratestack) is the authority on
+# `.cstack`; this grammar is a second, independent description of the same
+# syntax and nothing structurally stops the two drifting. So CI checks this
+# grammar out *against the cratestack repo's own corpus* — every `.cstack` file
+# it ships — and fails on any unexpected ERROR node. Drift shows up here, in the
+# repo that drifted, rather than as mis-highlighted code in someone's editor.
+#
+# It pins cratestack@main rather than a release tag on purpose: the failure we
+# want to catch is "a grammar change landed upstream and this grammar has not
+# caught up", and a pinned tag would hide exactly that until someone bumped it.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Upstream syntax can change without anything happening in this repo, so also
+  # run on a schedule — otherwise drift sits undetected until the next PR here.
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  grammar:
+    name: generate + corpus tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: Generate parser
+        run: npx tree-sitter generate
+      - name: Fail if the committed parser is stale
+        # src/parser.c is committed so consumers do not need the CLI. If
+        # regenerating changes it, the committed copy does not match grammar.js.
+        run: |
+          if ! git diff --quiet -- src/; then
+            echo "::error::src/ is out of date — run \`npx tree-sitter generate\` and commit the result"
+            git diff --stat -- src/
+            exit 1
+          fi
+      - name: Corpus tests
+        run: npx tree-sitter test
+
+  conformance:
+    name: conformance vs cratestack corpus
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npx tree-sitter generate
+      - name: Check out cratestack
+        uses: actions/checkout@v4
+        with:
+          repository: cratestack/cratestack
+          ref: main
+          path: .cratestack
+      - name: Parse every .cstack in the cratestack repo
+        env:
+          TREE_SITTER: npx tree-sitter
+        run: ./test/conformance.sh "$GITHUB_WORKSPACE/.cratestack"
+
+  rust:
+    name: rust bindings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npx tree-sitter generate
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test
+      - run: cargo fmt --check

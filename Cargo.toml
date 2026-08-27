@@ -10,7 +10,7 @@ repository = "https://github.com/cratestack/tree-sitter-cstack"
 edition = "2021"
 autoexamples = false
 build = "bindings/rust/build.rs"
-include = ["bindings/rust/*", "grammar.js", "queries/*", "src/*", "tree-sitter.json"]
+include = ["bindings/rust/*", "grammar.js", "queries/*", "src/*", "tree-sitter.json", "LICENSE"]
 
 [lib]
 path = "bindings/rust/lib.rs"

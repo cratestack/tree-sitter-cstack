@@ -55,7 +55,8 @@ mod tests {
             "enum Role {\n  Admin\n}\n\n",
             "type Money {\n  amount Int\n}\n\n",
             "model User {\n  id Int @id\n  role Role\n}\n\n",
-            "procedure ping(): Int\n",
+            "procedure ping(): Int\n\n",
+            "query totals(userId: String): Money\n  @@sql(\"SELECT 1\")\n",
         );
 
         let mut parser = tree_sitter::Parser::new();
@@ -83,6 +84,54 @@ mod tests {
             !kinds.contains("reference.call"),
             "`.cstack` is declarative and has no call sites",
         );
+    }
+
+    /// A `query` block is a *definition*, and specifically not a call site:
+    /// it is declared in the schema and its body is its own SQL. The tags
+    /// query has to name it, or a code-graph consumer silently loses every
+    /// `query` in a schema — which looks identical to a schema that has none.
+    #[test]
+    fn query_declaration_is_tagged_as_a_definition() {
+        let language: tree_sitter::Language = super::LANGUAGE.into();
+        let query = tree_sitter::Query::new(&language, super::TAGS_QUERY)
+            .expect("the bundled tags query should compile against this grammar");
+
+        let source = "query totals(userId: String): Money\n  @@sql(\"SELECT 1\")\n";
+
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&language).expect("grammar loads");
+        let tree = parser.parse(source, None).expect("parses");
+        assert!(
+            !tree.root_node().has_error(),
+            "a `query` block should parse without errors",
+        );
+
+        let mut cursor = tree_sitter::QueryCursor::new();
+        let mut definitions = Vec::new();
+        let mut matches = cursor.matches(&query, tree.root_node(), source.as_bytes());
+        while let Some(m) = tree_sitter::StreamingIterator::next(&mut matches) {
+            let capture_names: Vec<&str> = m
+                .captures
+                .iter()
+                .map(|capture| query.capture_names()[capture.index as usize])
+                .collect();
+            if !capture_names.contains(&"definition.function") {
+                continue;
+            }
+            for capture in m.captures {
+                if query.capture_names()[capture.index as usize] == "name" {
+                    definitions.push(
+                        capture
+                            .node
+                            .utf8_text(source.as_bytes())
+                            .expect("utf8")
+                            .to_owned(),
+                    );
+                }
+            }
+        }
+
+        assert_eq!(definitions, vec!["totals".to_owned()]);
     }
 
     #[test]

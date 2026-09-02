@@ -40,6 +40,7 @@ module.exports = grammar({
         $.enum_declaration,
         $.view_declaration,
         $.procedure_declaration,
+        $.query_declaration,
       ),
 
     // ---- comments -------------------------------------------------------
@@ -178,6 +179,23 @@ module.exports = grammar({
     parameter: ($) =>
       seq(field("name", $.identifier), ":", field("type", $.type)),
 
+    // ---- queries --------------------------------------------------------
+    // `query totals(userId: String): Totals @@sql("""...""") @allow(...)`
+    // — a `procedure` header with no body, carrying the SQL in a block
+    // attribute. The header is spelled exactly like a procedure's, so the
+    // parameter list and type rules are reused verbatim rather than
+    // duplicated; the result type is mandatory, and `T?` parses here even
+    // though the authoritative parser rejects it semantically.
+    query_declaration: ($) =>
+      seq(
+        "query",
+        field("name", $.identifier),
+        $.parameter_list,
+        ":",
+        field("result_type", $.type),
+        repeat(choice($.attribute, $.block_attribute)),
+      ),
+
     // ---- types ----------------------------------------------------------
     // `Page<Post>`, `Decimal(10, 2)`, `Post[]`, `String?`. Arity suffixes are
     // part of the type, not separate tokens, so highlighting a type reference
@@ -251,9 +269,17 @@ module.exports = grammar({
     identifier: (_) => IDENTIFIER,
     // Both quote styles are accepted: policy attributes in the wild use
     // single quotes (`@@allow('read', ...)`) as often as double.
+    // A `"""` body is verbatim — no escape processing — and may span lines,
+    // which is what `@@sql`/`@@server_sql` use to hold a formatted SQL
+    // statement. It is an alternative of the same token rather than a node of
+    // its own so that every existing `(string)` query and corpus expectation
+    // keeps covering it. The content alternation is written so it can never
+    // consume a `"""`: without that, the lexer's longest-match rule would run
+    // the first SQL body's closing delimiter on to the *last* one in the file.
     string: (_) =>
       token(
         choice(
+          seq('"""', repeat(choice(/[^"]/, /"[^"]/, /""[^"]/)), '"""'),
           seq('"', repeat(choice(/[^"\\]/, seq("\\", /./))), '"'),
           seq("'", repeat(choice(/[^'\\]/, seq("\\", /./))), "'"),
         ),

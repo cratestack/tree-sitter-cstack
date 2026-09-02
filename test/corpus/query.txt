@@ -1,0 +1,194 @@
+================================================================================
+query with a multi-line triple-quoted SQL body
+================================================================================
+
+/// Two aggregates in one round trip, one of them FILTERed.
+query loyaltyFeeSummary(userId: String, cutoff: DateTime): LoyaltyFeeSummary
+  @@sql("""
+    SELECT
+      COALESCE(SUM(discount), 0)::bigint AS "total",
+      COALESCE(SUM(discount) FILTER (WHERE created_at >= $2), 0)::bigint AS "thisMonth"
+    FROM loyalty_fee_events
+    WHERE user_id = $1
+  """)
+  @allow(auth() != null && auth().subjectId == userId)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (doc_comment)
+  (query_declaration
+    name: (identifier)
+    (parameter_list
+      (parameter name: (identifier) type: (type name: (type_identifier)))
+      (parameter name: (identifier) type: (type name: (type_identifier))))
+    result_type: (type name: (type_identifier))
+    (block_attribute
+      name: (block_attribute_name)
+      (attribute_arguments (string)))
+    (attribute
+      name: (attribute_name)
+      (attribute_arguments
+        (identifier)
+        (attribute_arguments)
+        (identifier)
+        (identifier)
+        (attribute_arguments)
+        (identifier)
+        (identifier)))))
+
+================================================================================
+query returning a list, with no policy attribute
+================================================================================
+
+query loyaltyLeaderboard(minTotal: Int): LoyaltyFeeRow[]
+  @@sql("""
+    SELECT user_id, SUM(discount)::bigint
+    FROM loyalty_fee_events
+    GROUP BY user_id
+  """)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (query_declaration
+    name: (identifier)
+    (parameter_list
+      (parameter name: (identifier) type: (type name: (type_identifier))))
+    result_type: (type name: (type_identifier))
+    (block_attribute
+      name: (block_attribute_name)
+      (attribute_arguments (string)))))
+
+================================================================================
+query with no parameters and a single-line SQL body
+================================================================================
+
+query loyaltyEventCount(): LoyaltyFeeSummary
+  @@sql("SELECT COUNT(*)::bigint AS total FROM loyalty_fee_events")
+  @allow(auth().isSystem())
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (query_declaration
+    name: (identifier)
+    (parameter_list)
+    result_type: (type name: (type_identifier))
+    (block_attribute
+      name: (block_attribute_name)
+      (attribute_arguments (string)))
+    (attribute
+      name: (attribute_name)
+      (attribute_arguments
+        (identifier)
+        (attribute_arguments)
+        (identifier)
+        (attribute_arguments)))))
+
+================================================================================
+query with an optional result type and a deny rule
+================================================================================
+
+query maybeSummary(userId: String): LoyaltyFeeSummary?
+  @@sql("SELECT 1")
+  @deny(auth() == null)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (query_declaration
+    name: (identifier)
+    (parameter_list
+      (parameter name: (identifier) type: (type name: (type_identifier))))
+    result_type: (type name: (type_identifier))
+    (block_attribute
+      name: (block_attribute_name)
+      (attribute_arguments (string)))
+    (attribute
+      name: (attribute_name)
+      (attribute_arguments
+        (identifier)
+        (attribute_arguments)
+        (identifier)))))
+
+================================================================================
+two queries in one file, each closing its own SQL body
+================================================================================
+
+query first(): Totals
+  @@sql("""
+    SELECT 1 AS "total"
+  """)
+
+query second(): Totals
+  @@sql("""
+    SELECT 2 AS "total"
+  """)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (query_declaration
+    name: (identifier)
+    (parameter_list)
+    result_type: (type name: (type_identifier))
+    (block_attribute
+      name: (block_attribute_name)
+      (attribute_arguments (string))))
+  (query_declaration
+    name: (identifier)
+    (parameter_list)
+    result_type: (type name: (type_identifier))
+    (block_attribute
+      name: (block_attribute_name)
+      (attribute_arguments (string)))))
+
+================================================================================
+a procedure parameter may still be named `query`
+================================================================================
+
+procedure searchPosts(query: FindMany<Post>): Post[]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (procedure_declaration
+    name: (identifier)
+    (parameter_list
+      (parameter
+        name: (identifier)
+        type: (type
+          name: (type_identifier)
+          (type_arguments (type name: (type_identifier))))))
+    return_type: (type name: (type_identifier))))
+
+================================================================================
+SQL body holding an unpaired double quote
+================================================================================
+
+query pipeSizes(): Totals
+  @@sql("""
+    SELECT label FROM parts WHERE label = '5" pipe'
+  """)
+
+query after(): Totals
+  @@sql("SELECT 1")
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (query_declaration
+    name: (identifier)
+    (parameter_list)
+    result_type: (type name: (type_identifier))
+    (block_attribute
+      name: (block_attribute_name)
+      (attribute_arguments (string))))
+  (query_declaration
+    name: (identifier)
+    (parameter_list)
+    result_type: (type name: (type_identifier))
+    (block_attribute
+      name: (block_attribute_name)
+      (attribute_arguments (string)))))

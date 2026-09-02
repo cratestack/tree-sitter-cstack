@@ -936,7 +936,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "number"
+          "name": "_scalar_argument"
         },
         {
           "type": "REPEAT",
@@ -949,7 +949,7 @@
               },
               {
                 "type": "SYMBOL",
-                "name": "number"
+                "name": "_scalar_argument"
               }
             ]
           }
@@ -957,6 +957,19 @@
         {
           "type": "STRING",
           "value": ")"
+        }
+      ]
+    },
+    "_scalar_argument": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "number"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "identifier"
         }
       ]
     },

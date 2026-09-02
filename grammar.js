@@ -193,8 +193,18 @@ module.exports = grammar({
     type_arguments: ($) =>
       seq("<", $.type, repeat(seq(",", $.type)), ">"),
 
+    // `Decimal(10, 2)`'s precision, but also `Geography(Polygon, 4326)`'s
+    // geometry subtype — a scalar argument is a number *or* a bare
+    // identifier, which is what the authoritative parser accepts.
     scalar_arguments: ($) =>
-      seq("(", $.number, repeat(seq(",", $.number)), ")"),
+      seq(
+        "(",
+        $._scalar_argument,
+        repeat(seq(",", $._scalar_argument)),
+        ")",
+      ),
+
+    _scalar_argument: ($) => choice($.number, $.identifier),
 
     // ---- attributes -----------------------------------------------------
     // Arguments are captured as a balanced, opaque token run. Attribute

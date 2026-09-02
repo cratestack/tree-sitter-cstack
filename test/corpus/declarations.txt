@@ -121,3 +121,29 @@ type Money {
         type: (type name: (type_identifier) (scalar_arguments (number) (number))))
       (field name: (identifier) type: (type name: (type_identifier)))
       (field name: (identifier) type: (type name: (type_identifier))))))
+
+================================================================================
+postgis type with an identifier scalar argument
+================================================================================
+
+model CoverageArea {
+  service_area Geography(Polygon, 4326)
+  embedding Vector(1536)
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (model_declaration
+    name: (identifier)
+    (model_body
+      (field
+        name: (identifier)
+        type: (type
+          name: (type_identifier)
+          (scalar_arguments (identifier) (number))))
+      (field
+        name: (identifier)
+        type: (type
+          name: (type_identifier)
+          (scalar_arguments (number)))))))

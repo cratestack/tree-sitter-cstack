@@ -18,6 +18,7 @@
   "from"
   "procedure"
   "mutation"
+  "query"
 ] @keyword
 
 ; ---- declaration names ----------------------------------------------------
@@ -32,6 +33,7 @@
 (extension_block name: (identifier) @namespace)
 
 (procedure_declaration name: (identifier) @function)
+(query_declaration name: (identifier) @function)
 
 ; ---- references -----------------------------------------------------------
 ; Every type reference, including generic arguments and view sources.

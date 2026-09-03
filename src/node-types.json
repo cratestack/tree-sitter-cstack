@@ -588,6 +588,50 @@
     }
   },
   {
+    "type": "query_declaration",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "result_type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "block_attribute",
+          "named": true
+        },
+        {
+          "type": "parameter_list",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "scalar_arguments",
     "named": true,
     "fields": {},
@@ -595,6 +639,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
         {
           "type": "number",
           "named": true
@@ -645,6 +693,10 @@
         },
         {
           "type": "procedure_declaration",
+          "named": true
+        },
+        {
+          "type": "query_declaration",
           "named": true
         },
         {
@@ -934,6 +986,10 @@
   },
   {
     "type": "procedure",
+    "named": false
+  },
+  {
+    "type": "query",
     "named": false
   },
   {
